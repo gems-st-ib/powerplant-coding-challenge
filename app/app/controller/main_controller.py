@@ -19,11 +19,9 @@ async def production_plan(payload: PayloadDTO):
 
 @router.post("/productionplan2/")
 async def production_plan(payload: PayloadDTO):
-    return calculate_production_plan(payload)
 
-
-    # return calculate_production_plan2(
-    #     payload.load,
-    #     map_fuels_dto_to_fuels(payload.fuels),
-    #     list(map(map_powerplant_dto_to_powerplant, payload.powerplants)))
-
+    fuels = map_fuels_dto_to_fuels(payload.fuels)
+    return calculate_production_plan2(
+        payload.load,
+        fuels,
+        list(map(lambda dto: map_powerplant_dto_to_powerplant(dto, fuels), payload.powerplants)))

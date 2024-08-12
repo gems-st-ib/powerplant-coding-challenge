@@ -1,11 +1,11 @@
-from app.app.entities.power_plant import PowerPlant
+from app.app.entities.fuels import Fuels
+from app.app.entities.abstract_power_plant import AbstractPowerPlant
 from app.app.utils.constants import Constants
 
 
-class Turbojet(PowerPlant):
-    def __init__(self, name: str, efficiency: float, pmin: int, pmax: int):
-        super().__init__(name, Constants.TURBO_JET, efficiency, pmin, pmax)
+class Turbojet(AbstractPowerPlant):
+    def __init__(self, name: str, efficiency: float, pmin: int, pmax: int, fuels: Fuels):
+        super().__init__(name, Constants.TURBO_JET, efficiency, pmin, pmax, fuels)
 
-    def calculate_output(self, fuel_price: float) -> float:
-        # Redefine el cálculo para Turbojet, por ejemplo
-        return self.efficiency * (self.pmax - self.pmin) * 0.8 - fuel_price
+    def compute_cost_per_unit(self, fuels: Fuels) -> float:
+        return fuels.kerosine / self.efficiency
