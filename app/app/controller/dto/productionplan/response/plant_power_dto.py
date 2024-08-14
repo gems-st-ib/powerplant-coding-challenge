@@ -3,3 +3,5 @@ class PlantPower:
         self.name = name
         self.p = p
 
+    def __repr__(self):
+        return f"PowerPlant(name={self.name}, p={self.p})"
