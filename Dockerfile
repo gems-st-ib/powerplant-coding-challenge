@@ -1,13 +1,16 @@
-# Usa una imagen base de Python 3.12
+
 FROM python:3.12-slim
 
-# Instala Poetry
 RUN pip install poetry
 
 WORKDIR /app
 
-COPY . .
+COPY pyproject.toml poetry.lock ./
 
-RUN poetry install
+RUN poetry install --no-dev --no-interaction --no-ansi
+
+COPY app ./app
+
+EXPOSE 8888
 
 ENTRYPOINT ["poetry", "run", "uvicorn", "app.app.main:app", "--host", "0.0.0.0", "--port", "8888"]
