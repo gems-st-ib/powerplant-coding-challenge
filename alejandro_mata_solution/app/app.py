@@ -31,8 +31,8 @@ def production_plan():
     powerplants = payload['powerplants']
 
     # Process plants gets everything done.
-    production = process_plants(load, fuels, powerplants)
-    return jsonify(production), 200
+    production, code = process_plants(load, fuels, powerplants)
+    return jsonify(production), code
 
 # Calculates the cost of production of a plant
 def get_cost_of_production(plant, fuels, fuel_key):
@@ -90,7 +90,11 @@ def process_plants(load, fuels, powerplants):
             production.append({'name': plant['name'], 'p': float(plant['pmax'])})
             remainer -= plant['pmax']
 
-    return production
+    # If we still have some remaining, we will return an error, as we can't produce that.
+    if remainer > 0:
+        return {'error': 'Not enough capacity to produce the load'}, 400
+
+    return production, 200
             
 def subtract_min_from_previous(production, previous_plant, pmin, remainer):
     # In the case that we need an additional plant but its pmin is bigger than the remainer,
