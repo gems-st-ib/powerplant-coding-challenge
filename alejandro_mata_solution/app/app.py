@@ -52,43 +52,59 @@ def get_cost_of_production(plant, fuels, fuel_key):
 # 4. If the load is bigger than pmax, continue with the next powerplant substracting the pmax from the remainer
 
 def process_plants(load, fuels, powerplants):
+    # First we get the cost for each plant so we can sort them
     for plant in powerplants:
-         fuel_key = powerplant_fue_dict[plant['type']]
-         plant['cost'] = get_cost_of_production(plant, fuels, fuel_key)
+        fuel_key = powerplant_fue_dict[plant['type']]
+        plant['cost'] = get_cost_of_production(plant, fuels, fuel_key)
 
-         if plant['type'] == 'windturbine':
-             plant['pmax'] = plant['pmax'] * fuels['wind(%)']/100
+        # In wind turbines, pmax has to be adjusted to the wind percentage
+        if plant['type'] == 'windturbine':
+            plant['pmax'] = plant['pmax'] * fuels['wind(%)']/100
 
     plants_sorted = sorted(powerplants, key=lambda x: x['cost'])
 
     remainer = load
-
     production = []
 
-    for plant in plants_sorted:
+    # I want the index to access the previous plant.
+    for i, plant in enumerate(plants_sorted):
+        # If we have less than 0 load remaining, we set 0 as the production for the plant
         if remainer <= 0:
             production.append({'name': plant['name'], 'p': 0.0})
 
+        # If we have more than 0 but less than pmin, we have to produce pmin and remove the excess from the previous plant.
+        # It's not the most optimal solution... but it'll work.
         elif remainer <= plant['pmin']:
-            production = subtract_min_from_previous(production, plant['pmin'],remainer)
+            production = subtract_min_from_previous(production, plants_sorted[i-1], plant['pmin'], remainer)
             production.append({'name': plant['name'], 'p': float(plant['pmin'])})
             remainer = 0
+
         
+        # If we have more than pmin but less than pmax, we produce that and we're done.
         elif remainer <= plant['pmax']:
             production.append({'name': plant['name'], 'p': float(remainer)})
             remainer = 0
 
+        # If we have more than pmax remaining, we produce pmax and look at the next plant.
         else:
             production.append({'name': plant['name'], 'p': float(plant['pmax'])})
             remainer -= plant['pmax']
 
     return production
             
-def subtract_min_from_previous(production, pmin, remainer):
-    # In the case that we need an additional plant but it's pmin is bigger than the remainer,
+def subtract_min_from_previous(production, previous_plant, pmin, remainer):
+    # In the case that we need an additional plant but its pmin is bigger than the remainer,
     # we will substract the difference from the previous plant. It's not perfect (we could see
-    # if we have more expensive plants with pmin smaller, therefore cheaper) but it's something.
+    # if we have more expensive plants with a smaller pmin, therefore cheaper) but it's something.
     differece = pmin - remainer
+    if (differece > previous_plant['pmax'] or previous_plant['type'] == 'windturbine'):
+        print(f"WARNING: Production is not optimal. Excess production of {differece} MWh")
+        return production
     production[-1]['p'] -= differece
-
+    # Also it won't work if that difference is bigger than the previous plant pmax,
+    # but we'll assume that won't happen.
+    # Also also, if the previous plant was a wind turbine, this won't work (we can't substract) 
+    # so we will have an excess.
+    # What I will do is fix it if it's easy and if I can't, just produce the minimum and accept the
+    # excess production as something unavoidable.    
     return production

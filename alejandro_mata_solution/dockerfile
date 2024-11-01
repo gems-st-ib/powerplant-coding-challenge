@@ -13,5 +13,8 @@ EXPOSE 8888
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=development
 
+# This is so that the output is logged immediately
+ENV PYTHONUNBUFFERED=1
+
 CMD ["flask", "run", "--host=0.0.0.0", "--port=8888", "--reload"]
 
